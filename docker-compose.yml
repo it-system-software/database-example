@@ -1,0 +1,31 @@
+services:
+ mariadb:
+   image: mariadb:11
+   volumes:
+     - $PWD/volumes/mysql:/var/lib/mysql
+   environment:
+     - MYSQL_DATABASE=${LAMP_MYSQL_DATABASE:-itsyssoftware}
+     - MYSQL_ROOT_PASSWORD=${LAMP_MYSQL_PASSWORD:-IU2026}
+   ports:
+     - "${MARIADB_PORT:-127.0.0.1:33060}:3306"
+ phpmyadmin:
+   image: phpmyadmin
+   environment:
+     - PMA_HOST=mariadb
+     - PMA_PORT=3306
+   ports:
+     - "${LAMP_PHPMYADMIN_PORT:-127.0.0.1:8081}:80"
+ php:
+   build:
+     context: .
+     dockerfile_inline: |
+       FROM php:8.2-apache
+       RUN apt-get update && apt-get install -y mariadb-client && rm -rf /var/lib/apt/lists/*
+       RUN docker-php-ext-install mysqli pdo pdo_mysql
+   volumes:
+     - $PWD/www:/var/www
+   ports:
+     - "${PHP_PORT:-127.0.0.1:8080}:80"
+   depends_on:
+     - mariadb
+ 
